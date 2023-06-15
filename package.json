@@ -1,13 +1,25 @@
 {
   "name": "cache-api",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "1.0.3",
+  "description": "cache data from display api.useful for working on the front end.",
+  "main": "src/index.js",
   "scripts": {
     "build": "rollup -c"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "cache",
+    "api",
+    "javascript",
+    "front-end"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yokasu/cache-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yokasu/cache-api/issues"
+  },
+  "author": "yokasu",
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.22.5",
