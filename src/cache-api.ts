@@ -1,20 +1,20 @@
-import { VALUE } from "./constant";
+import { CONFIGURATION, VALUE } from "./constant";
 import { getCacheMap, mergeArgsToObject, getKeys } from "./utils";
+import { IConfiguration, TFilter } from "./types/IConfiguration";
 
 export default class CacheAPI {
   _cacheMap = new Map();
   _dataCacheMap = new Map();
   _api;
   _limited = 10;
-  _lock;
+  _lock: Promise<any> = Promise.resolve();
   _length;
-  _cbStack;
-  static instances = [];
-  constructor(api, options = {}) {
-    const { filters, freeze = true } = options;
+  _cbStack: TFilter[];
+  static instances: CacheAPI[] = [];
+  constructor(api: Function, options: IConfiguration = CONFIGURATION) {
+    const { filters, freeze = true } = Object.assign(options, CONFIGURATION);
     this._api = api;
     this._length = api.length;
-    this._lock = Promise.resolve();
     CacheAPI.instances.push(this);
     this.send = this.send.bind(this);
     this.forceSend = this.forceSend.bind(this);
@@ -28,7 +28,7 @@ export default class CacheAPI {
       instance.clearCache();
     });
   }
-  static setCallbackToPromise(promise, cbStack) {
+  static setCallbackToPromise<T>(promise: Promise<T>, cbStack: TFilter[]) {
     const _stack = [...cbStack];
     let _promise = promise;
     while (_stack.length) {
@@ -37,7 +37,7 @@ export default class CacheAPI {
     }
     return _promise;
   }
-  setCallback(cb) {
+  setCallback(cb: TFilter | TFilter[]) {
     if (cb instanceof Array) {
       this._cbStack.concat(cb);
     } else if (cb instanceof Function) {
@@ -48,21 +48,21 @@ export default class CacheAPI {
   clearCache() {
     this._dataCacheMap = new Map();
   }
-  forceSend(...args) {
+  forceSend<T extends unknown[]>(...args: T) {
     const mergeObj = mergeArgsToObject(args);
-    let resolve;
+    let resolve: unknown;
     const promise = new Promise((_resolve) => {
       resolve = _resolve;
     });
-    const send = async (...args) => {
+    const send = async <T extends unknown[]>(...args: T) => {
       const result = await this._api(...args);
-      resolve(result);
+      (resolve as Function)(result);
       return result;
     };
     this.setCache(mergeObj, promise);
     return send(...args);
   }
-  async send(...args) {
+  async send<T extends unknown[]>(...args: T) {
     await this._lock;
     const isForced =
       args.length > this._length ? Boolean(args[this._length]) : false;
@@ -74,18 +74,18 @@ export default class CacheAPI {
     if (cache instanceof Promise) {
       return cache;
     }
-    let resolve;
+    let resolve: unknown;
     const promise = new Promise((_resolve) => {
       resolve = _resolve;
     });
-    const send = async (...args) => {
+    const send = async <T extends unknown[]>(...args: T) => {
       try {
         const result = CacheAPI.setCallbackToPromise(
           this._api(...args),
           this._cbStack
         );
         this.setCache(mergeObj, result);
-        resolve(result);
+        (resolve as Function)(result);
         return result;
       } catch (err) {
         console.error(err);
@@ -98,28 +98,28 @@ export default class CacheAPI {
   getCacheSize() {
     return this._dataCacheMap.size;
   }
-  getCache(obj) {
+  getCache(obj: Object) {
     const _map = getCacheMap(obj, this._cacheMap);
     if (_map === void 0) return _map;
-    const dataKey = _map.get(VALUE)?.get(VALUE);
+    const dataKey = (_map as any).get(VALUE)?.get(VALUE);
     if (this._dataCacheMap.has(dataKey)) {
       return this._dataCacheMap.get(dataKey);
     }
     return void 0;
   }
-  hasCache(obj) {
+  hasCache(obj: Object) {
     const _map = getCacheMap(obj, this._cacheMap);
     if (_map === void 0) return false;
-    const dataKey = _map.get(VALUE)?.get(VALUE);
+    const dataKey = (_map as any).get(VALUE)?.get(VALUE);
     return this._dataCacheMap.has(dataKey);
   }
-  setCache(obj, val) {
+  setCache<T>(obj: Object, val: T) {
     if (this.hasCache(obj)) return;
     if (this._dataCacheMap.size >= this._limited) {
       const firstKey = this._dataCacheMap.keys().next().value;
       this._dataCacheMap.delete(firstKey);
     }
-    const keys = getKeys(obj);
+    const keys: Array<string | symbol> = getKeys(obj);
     keys.push(VALUE);
     keys.reduce((map, key) => {
       let keyMap = map.get(key);
@@ -131,21 +131,21 @@ export default class CacheAPI {
           keyMap.set(key, dataKey);
           this._dataCacheMap.set(dataKey, val);
         } else {
-          keyMap.set(obj[key], _map);
+          keyMap.set((obj as any)[key], _map);
         }
         map.set(key, keyMap);
       } else {
-        const valueMap = keyMap.get(obj[key]);
+        const valueMap = keyMap.get((obj as any)[key]);
         if (valueMap !== void 0) {
           _map = valueMap;
         } else {
-          keyMap.set(obj[key], _map);
+          keyMap.set((obj as any)[key], _map);
         }
       }
       return _map;
     }, this._cacheMap);
   }
-  setLimited(val) {
+  setLimited(val: Number) {
     if (typeof val === "number") {
       this._limited = val;
     }
