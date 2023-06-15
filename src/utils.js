@@ -1,3 +1,6 @@
+export const getFnName = (fn) => {
+  return fn.name || fn.constructor.name;
+};
 export const getCacheMap = (obj, cache) => {
   const keys = getKeys(obj).reverse();
   let _map = new Map(cache);
