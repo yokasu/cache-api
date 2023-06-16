@@ -1,8 +1,6 @@
-node_modules/
-dist/
-bin/
 src/
-.babelrc
-.npmignore
-*.json
-!package.json
+config/
+node_modules/
+Scripts/
+dist/types
+tsconfig.json

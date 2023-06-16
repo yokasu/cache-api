@@ -1,5 +1,10 @@
-import { IConfiguration, TFilter } from "./types/IConfiguration";
-export default class CacheAPI {
+type TFilter = (...args: any) => Exclude<any, void>;
+interface IConfiguration {
+  freeze?: Boolean;
+  filters?: TFilter[];
+}
+
+declare class CacheAPI {
     _cacheMap: Map<any, any>;
     _dataCacheMap: Map<any, any>;
     _api: any;
@@ -21,3 +26,8 @@ export default class CacheAPI {
     setCache<T>(obj: Object, val: T): void;
     setLimited(val: Number): void;
 }
+
+declare const createCacheAPI: (api: Function, options: IConfiguration) => CacheAPI;
+declare const sendCacheAPI: (api: String | CacheAPI, isForced: Boolean) => any;
+
+export { createCacheAPI, CacheAPI as default, sendCacheAPI };
