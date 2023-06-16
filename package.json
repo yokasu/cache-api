@@ -1,6 +1,6 @@
 {
   "name": "cache-api",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "cache data from display api.useful for working on the front end.",
   "type": "module",
   "scripts": {
